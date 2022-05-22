@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32328.378
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MT2_Vector2", "MT2_Vector2.vcxproj", "{A0A54033-8EFE-45A0-9F3A-1C001358B7FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0A54033-8EFE-45A0-9F3A-1C001358B7FB}.Debug|x64.ActiveCfg = Debug|x64
+		{A0A54033-8EFE-45A0-9F3A-1C001358B7FB}.Debug|x64.Build.0 = Debug|x64
+		{A0A54033-8EFE-45A0-9F3A-1C001358B7FB}.Debug|x86.ActiveCfg = Debug|Win32
+		{A0A54033-8EFE-45A0-9F3A-1C001358B7FB}.Debug|x86.Build.0 = Debug|Win32
+		{A0A54033-8EFE-45A0-9F3A-1C001358B7FB}.Release|x64.ActiveCfg = Release|x64
+		{A0A54033-8EFE-45A0-9F3A-1C001358B7FB}.Release|x64.Build.0 = Release|x64
+		{A0A54033-8EFE-45A0-9F3A-1C001358B7FB}.Release|x86.ActiveCfg = Release|Win32
+		{A0A54033-8EFE-45A0-9F3A-1C001358B7FB}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FD21E301-A57D-4E41-AED2-4A59A93316CC}
+	EndGlobalSection
+EndGlobal
