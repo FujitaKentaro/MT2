@@ -14,7 +14,7 @@ const char TITLE[] = "LE2B_21_フジタケンタロウ:タイトル";
 const int WIN_WIDTH = 1024;
 
 // ウィンドウ縦幅
-const int WIN_HEIGHT = 576;
+const int WIN_HEIGHT = 576; 
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
