@@ -1,20 +1,62 @@
 #include "DxLib.h"
 #include "Vector2.h"
 #include "Vector3.h"
+#include "Matrix4.h"
+#include "Affin.h"
+#include <cstring>
 
 //関数プロトタイプ宣言
 //int DrawCircle(Vector2 vec, int r, unsigned int color);
-int DrawSphere3D(const Vector3& CenterPos, const float r, const int DivNum, const unsigned int DifColor, const unsigned int SpcColor, const int FillFlag);
-int DrawLine3D(const Vector3& pos1, const Vector3& pos2, const unsigned int Coloer);
+// 球
+int DrawSphere3D(
+	const Vector3& CenterPos,
+	const float r,
+	const int DivNum,
+	const unsigned int DifColor,
+	const unsigned int SpcColor,
+	const int FillFlag);
+// 円錐
+int DrawCone3D(
+	const Vector3& TopPos,
+	const Vector3& BottomPos,
+	const float r, 
+	const int DivNum, 
+	const unsigned int DifColor,
+	const unsigned int SpcColor,
+	const int FillFlag);
+// 線分
+int DrawLine3D(
+	const Vector3& pos1,
+	const Vector3& pos2,
+	const unsigned int Coloer);
+// カメラの位置と姿勢の設定
+int SetCameraPositionAndTargetAndUpVec(
+	const Vector3& cameraPosition,
+	const Vector3& cameraTarget,
+	const Vector3& cameraUp
+);
+// モデルの座標変換用行列セット
+int MV1SetMatrix(
+	const int MHandle,
+	const Matrix4 matrix);
+
+// 関数プロトタイプ宣言
+void DrawAxis3D(const float length);
+void DrawKeyOperation();
+
+
+
+
+
 
 // ウィンドウのタイトルに表示する文字列
 const char TITLE[] = "LE2B_21_フジタケンタロウ:タイトル";
 
 // ウィンドウ横幅
-const int WIN_WIDTH = 1024;
+const int WIN_WIDTH = 1600;
 
 // ウィンドウ縦幅
-const int WIN_HEIGHT = 576; 
+const int WIN_HEIGHT = 900; 
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -43,26 +85,34 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	// (ダブルバッファ)描画先グラフィック領域は裏面を指定
 	SetDrawScreen(DX_SCREEN_BACK);
 
+	SetUseZBufferFlag(TRUE);
+	SetWriteZBufferFlag(TRUE);
+
 	// 画像などのリソースデータの変数宣言と読み込み
+	Vector3 cameraPosition(50.0f, 50.0f, -400.0f);
+	Vector3 cameraTarget(0.0f, 0.0f, 0.0f);
+	Vector3 cameraUp(0.0f, 1.0f, 0.0f);
+
 
 	//	クリップ面	近		遠
-	SetCameraNearFar(1.0f, 1000.0f);// カメラの有効範囲を設定
+	SetCameraNearFar(1.0f, 10000.0f);// カメラの有効範囲を設定
 	SetCameraScreenCenter(			// 画面の中心をカメラの中心に合わせる
 		WIN_WIDTH / 2.0f,
 		WIN_HEIGHT / 2.0f);
 	SetCameraPositionAndTargetAndUpVec(
-		VGet(0.0f, 0.0f, -100.0f), // カメラ位置
-		VGet(0.0f, 0.0f,    0.0f), // カメラ注視点
-		VGet(0.0f, 1.0f,    0.0f));// カメラの上の向き
+		cameraPosition,
+		cameraTarget,
+		cameraUp);
 
+	int model = MV1LoadModel("Resources/fighter/fighter.mqo");
 
 	// ゲームループで使う変数の宣言
-
-	Vector3 position(0, 0, 100);					//位置
-	Vector3 velocity(0.0f, 0.0f, 0.5f);			//速度
-
-	SetUseZBufferFlag(TRUE);
-	SetWriteZBufferFlag(TRUE);
+	const float ROT_UNIT = 0.5f;
+	Vector3 rot(0.0f, 0.0f, 0.0f);
+	Vector3 scale(10.0f, 10.0f, 10.0f);
+	Vector3 trans(0.0f, 0.0f, 0.0f);
+	Matrix4 matWorld;
+	
 
 	// 最新のキーボード情報用
 	char keys[256] = { 0 };
@@ -87,15 +137,41 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		//---------  ここからプログラムを記述  ----------//
 
 		// 更新処理
-		position += velocity;
+		if (CheckHitKey(KEY_INPUT_A)) {
+			rot.y += ROT_UNIT;
+		}
+		if (CheckHitKey(KEY_INPUT_D)) {
+			rot.y -= ROT_UNIT;
+		}
 
+		if (CheckHitKey(KEY_INPUT_W)) {
+			rot.x += ROT_UNIT;
+		}
+		if (CheckHitKey(KEY_INPUT_S)) {
+			rot.x -= ROT_UNIT;
+		}
 
+		if (CheckHitKey(KEY_INPUT_E)) {
+			rot.z += ROT_UNIT;
+		}
+		if (CheckHitKey(KEY_INPUT_Z)) {
+			rot.z -= ROT_UNIT;
+		}
+
+		if (CheckHitKey(KEY_INPUT_R)) {
+			rot.x = rot.y = rot.z = 0;
+		}		
+		matWorld= Affin::matWorld(trans, rot, scale);
+
+		MV1SetMatrix(model, matWorld);
 
 		// 描画処理
 		// 画面クリア
 		ClearDrawScreen();
-		DrawSphere3D(position, 80.0f, 32,GetColor(255, 0, 0),GetColor(255,255,255),TRUE);
+		DrawAxis3D(200.0f);
+		MV1DrawModel(model);
 
+		DrawKeyOperation();
 
 		//---------  ここまでにプログラムを記述  ---------//
 		// (ダブルバッファ)裏面
@@ -143,6 +219,20 @@ int DrawSphere3D(
 	return DrawSphere3D(centerPos, r, DivNum, DifColor, SpcColor, FillFlag);
 
 }
+int DrawCone3D(
+	const Vector3& TopPos,
+	const Vector3& BottomPos,
+	const float r,
+	const int DivNum,
+	const unsigned int DifColor,
+	const unsigned int SpcColor,
+	const int FillFlag) {
+	VECTOR topPos = { TopPos.x,TopPos.y,TopPos.z };
+	VECTOR bottomPos = { BottomPos.x,BottomPos.y,BottomPos.z };
+
+
+	return DrawCone3D(topPos, bottomPos, r, DivNum, DifColor, SpcColor, FillFlag);
+}
 
 int DrawLine3D(const Vector3& pos1, const Vector3& pos2, const unsigned int Coloer) {
 	
@@ -150,4 +240,73 @@ int DrawLine3D(const Vector3& pos1, const Vector3& pos2, const unsigned int Colo
 	VECTOR p2 = { pos2.x,pos2.y,pos2.z };
 
 	return DrawLine3D(p1, p2, Coloer);
+}
+
+// カメラの位置と姿勢の設定
+int SetCameraPositionAndTargetAndUpVec(
+	const Vector3& cameraPosition,
+	const Vector3& cameraTarget,
+	const Vector3& cameraUp
+) {
+	VECTOR position = { cameraPosition.x,cameraPosition.y,cameraPosition.z };
+	VECTOR target = { cameraTarget.x,cameraTarget.y,cameraTarget.z };
+	VECTOR up = { cameraUp.x,cameraUp.y,cameraUp.z };
+
+	return SetCameraPositionAndTargetAndUpVec(position, target, up);
+}
+// モデルの座標変換用行列セット
+int MV1SetMatrix(
+	const int MHandle,
+	const Matrix4 Matrix
+) {
+	MATRIX matrix;
+	std::memcpy(&matrix, &Matrix, sizeof MATRIX);
+
+	return MV1SetMatrix(MHandle, matrix);
+}
+
+// 関数プロトタイプ宣言
+void DrawAxis3D(const float length) {
+	// 軸の線の描画
+	DrawLine3D(Vector3(-length, 0, 0), Vector3(+length, 0, 0), GetColor(255, 0, 0));
+	DrawLine3D(Vector3(0, -length, 0), Vector3(0, +length, 0), GetColor(0, 255, 0));
+	DrawLine3D(Vector3(0, 0, -length), Vector3(0, 0, +length), GetColor(0, 0, 255));
+
+	// 軸の先の描画
+	const float coneSize = 10.0f;
+	DrawCone3D(
+		Vector3(length, 0, 0),
+		Vector3(length - coneSize, 0, 0),
+		coneSize / 2,
+		16,
+		GetColor(255, 0, 0),
+		GetColor(255, 255, 255),
+		TRUE);
+	DrawCone3D(
+		Vector3(0,length, 0),
+		Vector3(0,length - coneSize, 0),
+		coneSize / 2,
+		16,
+		GetColor(0,255, 0),
+		GetColor(255, 255, 255),
+		TRUE);
+	DrawCone3D(
+		Vector3(0, 0,length),
+		Vector3(0, 0,length - coneSize),
+		coneSize / 2,
+		16,
+		GetColor(0, 0,255),
+		GetColor(255, 255, 255),
+		TRUE);
+
+
+}
+void DrawKeyOperation() {
+	const unsigned white = GetColor(255, 255, 255);
+
+	DrawFormatString(10, 20 * 1, white, "  [W][E][R]  R : リセット");
+	DrawFormatString(10, 20 * 2, white, "[A][S][D]   AD : y軸回りの回転");
+	DrawFormatString(10, 20 * 3, white, " [Z]        WS : x軸回りの回転");
+	DrawFormatString(10, 20 * 4, white, "            EZ : z軸回りの回転");
+	
 }

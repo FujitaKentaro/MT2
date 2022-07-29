@@ -1,4 +1,7 @@
 #pragma once
+#include "Vector3.h"
+
+
 class Matrix4
 {
 public:
@@ -19,5 +22,11 @@ public:
 	// 代入演算子オーバーロード
 	Matrix4& operator*=(const Matrix4& m2);
 
-};
+	
 
+};
+//Matrix4& operator*=(Matrix4& m1, const Matrix4& m2);
+
+// 2項演算子オーバーロード
+const Matrix4 operator*(const Matrix4& m1, const Matrix4& m2);
+const Vector3 operator*(const Vector3& v , const Matrix4& m2);
