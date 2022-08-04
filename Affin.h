@@ -19,8 +19,13 @@ namespace Affin {
 	// 単位行列 set
 	Matrix4 matUnit();
 
+	
+	// 零行列設定
+	Matrix4 matZero();
+
 	// ベクトルと行列の掛け算
 	Vector3 VecMat(Vector3 vec, Matrix4 mat);
+	Vector3 transform(const Vector3& v, const Matrix4& m);
 
 	// 平行移動
 	Matrix4 matTrans(float moveX, float moveY, float moveZ);

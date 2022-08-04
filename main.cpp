@@ -107,11 +107,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	int model = MV1LoadModel("Resources/fighter/fighter.mqo");
 
 	// ゲームループで使う変数の宣言
-	const float ROT_UNIT = 0.5f;
-	Vector3 rot(0.0f, 0.0f, 0.0f);
-	Vector3 scale(10.0f, 10.0f, 10.0f);
-	Vector3 trans(0.0f, 0.0f, 0.0f);
-	Matrix4 matWorld;
+	const float ROT_UNIT = 1.0f;
+	Vector3 rot = { 0.0f, 0.0f, 0.0f };
+	Vector3 scale = {10.0f, 10.0f, 10.0f};
+	Vector3 trans = { 0.0f, 0.0f, 0.0f };
+	Matrix4 matWorld = Affin::matUnit();
 	
 
 	// 最新のキーボード情報用
@@ -161,7 +161,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		if (CheckHitKey(KEY_INPUT_R)) {
 			rot.x = rot.y = rot.z = 0;
 		}		
-		matWorld= Affin::matWorld(trans, rot, scale);
+		matWorld = Affin::matWorld(trans, rot, scale);
+		
 
 		MV1SetMatrix(model, matWorld);
 

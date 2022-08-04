@@ -18,6 +18,22 @@ Matrix4 Affin::matUnit() {
 }
 
 /// <summary>
+/// 零行列設定
+/// </summary>
+Matrix4 Affin::matZero() {
+	Matrix4 matZero;
+
+	matZero = {
+		0.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f
+	};
+
+	return matZero;
+}
+
+/// <summary>
 /// 平行移動
 /// </summary>
 Matrix4 Affin::matTrans(float moveX, float moveY, float moveZ) {
@@ -225,4 +241,20 @@ Vector3 Affin::VecMat(Vector3 vec, Matrix4 mat) {
 	Vector3 re = { x, y, z };
 
 	return re;
+}
+
+/// <summary>
+///	ベクトルと行列の掛け算その2
+/// </summary>
+Vector3 Affin::transform(const Vector3& v, const Matrix4& m) {
+
+	float w = v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + m.m[3][3];
+
+	Vector3 result{
+		(v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + m.m[3][0]) / w,
+		(v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + m.m[3][1]) / w,
+		(v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + m.m[3][2]) / w,
+	};
+
+	return result;
 }

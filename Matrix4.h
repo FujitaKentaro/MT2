@@ -1,5 +1,6 @@
 #pragma once
 #include "Vector3.h"
+#include <DxLib.h>
 
 
 class Matrix4
@@ -12,6 +13,7 @@ public:
 
 	// コンストラクタ
 	Matrix4();
+	Matrix4(float num);
 	// 成分を指定しての生成
 	Matrix4(
 		float m00, float m01, float m02, float m03,
@@ -20,12 +22,12 @@ public:
 		float m30, float m31, float m32, float m33);
 
 	// 代入演算子オーバーロード
-	Matrix4& operator*=(const Matrix4& m2);
-
+	//Matrix4 operator*=(const Matrix4& m2);
+	//Matrix4& operator*=(const Matrix4& m2);
 	
-
+	Vector3 transform(const Vector3& v, const Matrix4& m);
 };
-//Matrix4& operator*=(Matrix4& m1, const Matrix4& m2);
+Matrix4& operator*=(Matrix4& m1, const Matrix4& m2);
 
 // 2項演算子オーバーロード
 const Matrix4 operator*(const Matrix4& m1, const Matrix4& m2);
