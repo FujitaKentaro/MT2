@@ -3,6 +3,7 @@
 #include "Vector3.h"
 #include "Matrix4.h"
 #include "Affin.h"
+#include "Easing.h"
 #include <cstring>
 
 //関数プロトタイプ宣言
@@ -44,6 +45,8 @@ int MV1SetMatrix(
 void DrawAxis3D(const float length);
 void DrawKeyOperation();
 
+const Vector3 Lerp(const Vector3& start, const Vector3& end, const float t);
+
 
 
 
@@ -53,10 +56,10 @@ void DrawKeyOperation();
 const char TITLE[] = "LE2B_21_フジタケンタロウ:タイトル";
 
 // ウィンドウ横幅
-const int WIN_WIDTH = 1600;
+const int WIN_WIDTH = 1024;
 
 // ウィンドウ縦幅
-const int WIN_HEIGHT = 900; 
+const int WIN_HEIGHT = 576; 
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -85,17 +88,18 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	// (ダブルバッファ)描画先グラフィック領域は裏面を指定
 	SetDrawScreen(DX_SCREEN_BACK);
 
-	SetUseZBufferFlag(TRUE);
-	SetWriteZBufferFlag(TRUE);
+	SetUseZBuffer3D(TRUE);
+	SetWriteZBuffer3D(TRUE);
 
 	// 画像などのリソースデータの変数宣言と読み込み
-	Vector3 cameraPosition(50.0f, 50.0f, -400.0f);
+	Vector3 cameraPosition(0.0f, 0.0f, -120.0f);
+	//Vector3 cameraPosition(50.0f, 50.0f, -400.0f);
 	Vector3 cameraTarget(0.0f, 0.0f, 0.0f);
 	Vector3 cameraUp(0.0f, 1.0f, 0.0f);
 
 
 	//	クリップ面	近		遠
-	SetCameraNearFar(1.0f, 10000.0f);// カメラの有効範囲を設定
+	SetCameraNearFar(1.0f, 1000.0f);// カメラの有効範囲を設定
 	SetCameraScreenCenter(			// 画面の中心をカメラの中心に合わせる
 		WIN_WIDTH / 2.0f,
 		WIN_HEIGHT / 2.0f);
@@ -104,15 +108,24 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		cameraTarget,
 		cameraUp);
 
-	int model = MV1LoadModel("Resources/fighter/fighter.mqo");
+	//int model = MV1LoadModel("Resources/fighter/fighter.mqo");
+	
+	// 時間計測に必要なデータ
+	long long startCount = 0;
+	long long nowCount = 0;
+	long long elapsedCount = 0;
+
+	// 補間で使うデータ
+	// start -> end を 5[ｓ] で完了させる
+	Vector3 start(-100.0f, 0, 0);
+	Vector3 end(+100.0f, 0, 0);
+	float maxTime = 5.0f;
+	float timeRate;	
 
 	// ゲームループで使う変数の宣言
-	const float ROT_UNIT = 1.0f;
-	Vector3 rot = { 0.0f, 0.0f, 0.0f };
-	Vector3 scale = {10.0f, 10.0f, 10.0f};
-	Vector3 trans = { 0.0f, 0.0f, 0.0f };
-	Matrix4 matWorld = Affin::matUnit();
-	
+
+	Vector3 position=start;
+	startCount = GetNowHiPerformanceCount();
 
 	// 最新のキーボード情報用
 	char keys[256] = { 0 };
@@ -137,42 +150,45 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		//---------  ここからプログラムを記述  ----------//
 
 		// 更新処理
-		if (CheckHitKey(KEY_INPUT_A)) {
-			rot.y += ROT_UNIT;
-		}
-		if (CheckHitKey(KEY_INPUT_D)) {
-			rot.y -= ROT_UNIT;
-		}
-
-		if (CheckHitKey(KEY_INPUT_W)) {
-			rot.x += ROT_UNIT;
-		}
-		if (CheckHitKey(KEY_INPUT_S)) {
-			rot.x -= ROT_UNIT;
-		}
-
-		if (CheckHitKey(KEY_INPUT_E)) {
-			rot.z += ROT_UNIT;
-		}
-		if (CheckHitKey(KEY_INPUT_Z)) {
-			rot.z -= ROT_UNIT;
-		}
-
 		if (CheckHitKey(KEY_INPUT_R)) {
-			rot.x = rot.y = rot.z = 0;
-		}		
-		matWorld = Affin::matWorld(trans, rot, scale);
+			startCount = GetNowHiPerformanceCount();
+		}
+		nowCount = GetNowHiPerformanceCount();
+		elapsedCount = nowCount - startCount;
+		float elapsedTime = static_cast<float> (elapsedCount) / 1'000'000.0f;
+		// スタート地点	：start
+		// エンド地点		：end
+		// 経過時間		：elapsedTime [s]
+		// 移動完了の率（経過時間/全体時間） ：timeRate (%)
+
+		timeRate = min(elapsedTime / maxTime, 1.0f);
+
+
+		
+		position=Lerp(start, end, timeRate);
+		// position = easeIn(start, end, timeRate);
+		// position = easeOut(start, end, timeRate);
+		// position = easeInOut(start, end, timeRate);
 		
 
-		MV1SetMatrix(model, matWorld);
 
 		// 描画処理
 		// 画面クリア
 		ClearDrawScreen();
-		DrawAxis3D(200.0f);
-		MV1DrawModel(model);
+		DrawAxis3D(500.0f);
+		
 
-		DrawKeyOperation();
+		DrawSphere3D(position, 5.0f, 32, GetColor(255, 0, 0), GetColor(255, 255, 255), TRUE);
+
+		DrawFormatString(0, 0, GetColor(255, 255, 255), "position (%5.1f,%5.1f,%5.1f)", position.x, position.y, position.z);
+		DrawFormatString(0, 20, GetColor(255, 255, 255), "%7.3f [s] ", elapsedTime);
+		DrawFormatString(0, 40, GetColor(255, 255, 255), " [R] : Restart");
+		
+		DrawFormatString(0, 80, GetColor(255, 255, 255), "position (%5.1f,%5.1f,%5.1f)", start.x, start.y, start.z);
+		DrawFormatString(0, 100, GetColor(255, 255, 255), "position (%5.1f,%5.1f,%5.1f)", end.x, end.y, end.z);
+		DrawFormatString(0, 120, GetColor(255, 255, 255), "%7.3f [s] ", timeRate);
+
+		//DrawKeyOperation();
 
 		//---------  ここまでにプログラムを記述  ---------//
 		// (ダブルバッファ)裏面
@@ -310,4 +326,10 @@ void DrawKeyOperation() {
 	DrawFormatString(10, 20 * 3, white, " [Z]        WS : x軸回りの回転");
 	DrawFormatString(10, 20 * 4, white, "            EZ : z軸回りの回転");
 	
+}
+
+const Vector3 Lerp(const Vector3& start, const Vector3& end, const float t) {
+	/*float y = t;
+	return start * (1.0f - y) + end * y;*/
+	return start * (1.0f - t) + end * t;
 }
