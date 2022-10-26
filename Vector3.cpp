@@ -36,7 +36,7 @@ Vector3 Vector3::cross(const Vector3& v) const {
 	return Vector3((this->y * v.z) - (this->z * v.y), (this->z * v.x) - (this->x * v.z), (this->x * v.y) - (this->y * v.x));
 }
 
-const Vector3 Vector3::lerp(const Vector3& start, const Vector3& end, const float t)  {
+const Vector3 Vector3::lerp(const Vector3& start, const Vector3& end, const float t) {
 	/*float y = t;
 	return start * (1.0f - y) + end * y;*/
 	return start * (1.0f - t) + end * t;
@@ -53,24 +53,28 @@ Vector3 Vector3::operator-()const {
 Vector3& Vector3::operator+=(const Vector3& v) {
 	this->x += v.x;
 	this->y += v.y;
+	this->z += v.z;
 	return *this;
 }
 
 Vector3& Vector3::operator-=(const Vector3& v) {
 	this->x -= v.x;
 	this->y -= v.y;
+	this->z -= v.z;
 	return *this;
 }
 
 Vector3& Vector3::operator*=(float s) {
 	this->x *= s;
 	this->y *= s;
+	this->z *= s;
 	return *this;
 }
 
 Vector3& Vector3::operator/=(float s) {
 	this->x /= s;
 	this->y /= s;
+	this->z /= s;
 	return *this;
 }
 
@@ -92,7 +96,8 @@ const Vector3 operator*(const Vector3& v, float s) {
 }
 
 const Vector3 operator*(float s, const Vector3& v) {
-	return s * v;
+	Vector3 temp(v);
+	return temp * s;
 }
 
 const Vector3 operator/(const Vector3& v, float s) {
