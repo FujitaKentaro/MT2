@@ -5,6 +5,8 @@
 #include "Affin.h"
 #include "Easing.h"
 #include <cstring>
+#include <vector>
+
 
 //関数プロトタイプ宣言
 //int DrawCircle(Vector2 vec, int r, unsigned int color);
@@ -46,6 +48,8 @@ void DrawAxis3D(const float length);
 void DrawKeyOperation();
 
 const Vector3 Lerp(const Vector3& start, const Vector3& end, const float t);
+
+Vector3 splinePosition(const std::vector<Vector3>& points, size_t startIndex, float t);
 
 
 
@@ -92,9 +96,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	SetWriteZBuffer3D(TRUE);
 
 	// 画像などのリソースデータの変数宣言と読み込み
-	Vector3 cameraPosition(0.0f, 200.0f, 0.0f);
+	Vector3 cameraPosition(-20.0f, 20.0f, -200.0f);
 	Vector3 cameraTarget(0.0f, 0.0f, 0.0f);
-	Vector3 cameraUp(0.0f, 0.0f, 1.0f);
+	Vector3 cameraUp(0.0f, 1.0f, 0.0f);
 
 
 	//	クリップ面	近		遠
@@ -116,10 +120,16 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	// 補間で使うデータ
 	// start -> end を 5[ｓ] で完了させる
-	Vector3 p0(-100.0f, 0, 0.0f);
-	Vector3 p1(-10.0f, 0, 50.0f);
-	Vector3 p2(+10.0f, 0, -50.0f);
-	Vector3 p3(+100.0f, 0, 0);
+	Vector3 start(-100.0f, 0, 0.0f);
+	Vector3 p1(-50.0f, 50.0f, 50.0f);
+	Vector3 p2(+50.0f, -30.0f, -50.0f);
+	Vector3 end(+100.0f, 0, 0);
+
+	std::vector<Vector3> points{ start,start,p1,p2,end,end };
+
+	// P1 からスタートする
+	size_t startIndex = 1;
+
 	float maxTime = 5.0f;
 	float timeRate;
 
@@ -153,6 +163,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		// 更新処理
 		if (CheckHitKey(KEY_INPUT_R)) {
 			startCount = GetNowHiPerformanceCount();
+			startIndex = 1;
 		}
 		nowCount = GetNowHiPerformanceCount();
 		elapsedCount = nowCount - startCount;
@@ -162,15 +173,23 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		// 経過時間		：elapsedTime [s]
 		// 移動完了の率（経過時間/全体時間） ：timeRate (%)
 
-		timeRate = min(elapsedTime / maxTime, 1.0f);
+		// timeRate が 1.0ｆ 以上になったら、次の区間に進む
+		//timeRate = min(elapsedTime / maxTime, 1.0f);
+		timeRate = elapsedTime / maxTime;
 
-		Vector3 A = Lerp(p0, p1, timeRate);
-		Vector3 B = Lerp(p1, p2, timeRate);
-		Vector3 C = Lerp(p2, p3, timeRate);
-		Vector3 AB = Lerp(A, B, timeRate);
-		Vector3 BC = Lerp(B, C, timeRate);
+		if (timeRate >= 1.0f) {
+			if (startIndex < points.size() - 3) {
+				startIndex += 1;
+				timeRate -= 1.0f;
+				startCount = GetNowHiPerformanceCount();
+			}
+			else {
+				timeRate = 1.0f;
+			}
+		}
+		position = splinePosition(points, startIndex, timeRate);
 
-		position = Lerp(AB, BC, timeRate);
+		// position = Lerp(AB, BC, timeRate);
 		// position = easeIn(start, end, timeRate);
 		// position = easeOut(start, end, timeRate);
 		// position = easeInOut(start, end, timeRate);
@@ -189,11 +208,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		DrawFormatString(0, 20, GetColor(255, 255, 255), "%7.3f [s] ", elapsedTime);
 		DrawFormatString(0, 40, GetColor(255, 255, 255), " [R] : Restart");
 		DrawFormatString(0, 60, GetColor(255, 255, 255), "%7.3f [s] ", timeRate);
-		DrawFormatString(0, 80, GetColor(255, 255, 255), " A (%5.1f,%5.1f,%5.1f)", p0.x, p0.y, p0.z);
+		DrawFormatString(0, 80, GetColor(255, 255, 255), " A (%5.1f,%5.1f,%5.1f)", start.x, start.y, start.z);
 		DrawFormatString(0, 100, GetColor(255, 255, 255), " B (%5.1f,%5.1f,%5.1f)", p1.x, p1.y, p1.z);
 		DrawFormatString(0, 120, GetColor(255, 255, 255), " A (%5.1f,%5.1f,%5.1f)", p2.x, p2.y, p2.z);
-		DrawFormatString(0, 140, GetColor(255, 255, 255), " B (%5.1f,%5.1f,%5.1f)", p3.x, p3.y, p3.z);
-	
+		DrawFormatString(0, 140, GetColor(255, 255, 255), " B (%5.1f,%5.1f,%5.1f)", end.x, end.y, end.z);
+
 		//DrawKeyOperation();
 
 		//---------  ここまでにプログラムを記述  ---------//
@@ -338,4 +357,28 @@ const Vector3 Lerp(const Vector3& start, const Vector3& end, const float t) {
 	/*float y = t;
 	return start * (1.0f - y) + end * y;*/
 	return start * (1.0f - t) + end * t;
+}
+
+Vector3 splinePosition(const std::vector<Vector3>& points, size_t startIndex, float t) {
+
+	// 補間すべき点の数
+	size_t n = points.size() - 2;
+
+	if (startIndex > n)return points[n];	// Pnの値を返す
+	if (startIndex < 1)return points[1];	// P1の値を返す
+
+	// ｐ0～ｐ３ の制御点を取得する ※ ｐ1～ｐ2
+	Vector3 p0 = points[startIndex - 1];
+	Vector3 p1 = points[startIndex];
+	Vector3 p2 = points[startIndex + 1];
+	Vector3 p3 = points[startIndex + 2];
+
+	// Catmull-Rom の式による補間
+	Vector3 position;
+		position = {
+		2 * p1 + (-p0 + p2) * t +
+		(2 * p0 - 5 * p1 + 4 * p2 - p3) * (t * t) +
+		(-p0 + 3 * p1 - 3 * p2 + p3) * (t * t * t)};
+
+		return position*0.5f;
 }
