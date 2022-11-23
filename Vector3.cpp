@@ -95,6 +95,14 @@ const Vector3 operator*(const Vector3& v, float s) {
 	return temp *= s;
 }
 
+const Vector3 operator*(const Vector3& v, const Vector3& v2) {
+	Vector3 temp;
+	temp.x = v.x * v2.x;
+	temp.y = v.y * v2.y;
+	temp.z = v.z * v2.z;
+	return temp ;
+}
+
 const Vector3 operator*(float s, const Vector3& v) {
 	Vector3 temp(v);
 	return temp * s;

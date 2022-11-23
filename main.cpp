@@ -175,6 +175,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 		// timeRate ‚ª 1.0‚† ˆÈã‚É‚È‚Á‚½‚çAŽŸ‚Ì‹æŠÔ‚Éi‚Þ
 		//timeRate = min(elapsedTime / maxTime, 1.0f);
+
+
 		timeRate = elapsedTime / maxTime;
 
 		if (timeRate >= 1.0f) {
@@ -187,9 +189,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 				timeRate = 1.0f;
 			}
 		}
+
 		position = splinePosition(points, startIndex, timeRate);
 
-		// position = Lerp(AB, BC, timeRate);
+		 //position = Lerp(start, end, timeRate);
 		// position = easeIn(start, end, timeRate);
 		// position = easeOut(start, end, timeRate);
 		// position = easeInOut(start, end, timeRate);
@@ -356,7 +359,13 @@ void DrawKeyOperation() {
 const Vector3 Lerp(const Vector3& start, const Vector3& end, const float t) {
 	/*float y = t;
 	return start * (1.0f - y) + end * y;*/
-	return start * (1.0f - t) + end * t;
+	//return start * (1.0f - t) + end * t;
+	
+	//return start * (1.0f - t*t*t*t*t*t) + end * t;
+	Vector3 x = start * (1.0f - t) + end * t;
+
+	return x;
+
 }
 
 Vector3 splinePosition(const std::vector<Vector3>& points, size_t startIndex, float t) {
