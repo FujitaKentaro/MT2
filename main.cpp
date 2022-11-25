@@ -113,8 +113,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		cameraUp);
 
 	// ゲームループで使う変数の宣言
+
 	bool isHit = false;
-	Vector2 lineStart = { 20 ,20 }, lineEnd = { 120, 20 };
+	Vector2 lineStart = { 20 ,20 },
+		lineEnd = { 120, 20 };
 	int circleR = 50;
 	Vector2 circlePos = { WIN_WIDTH / 2,WIN_HEIGHT / 2 };
 
@@ -174,7 +176,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		lineStartCirclVec = circlePos - lineStart;
 		normLineVec = lineVec.nomalize();
 
-		
 		StartVecDot = lineStartCirclVec.dot(lineVec);
 		EndVecDot = lineEndCirclVec.dot(lineVec);
 
