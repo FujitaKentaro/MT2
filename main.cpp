@@ -9,7 +9,8 @@
 
 
 //関数プロトタイプ宣言
-//int DrawCircle(Vector2 vec, int r, unsigned int color);
+int DrawCircle(Vector2 vec, int r, unsigned int color);
+
 // 球
 int DrawSphere3D(
 	const Vector3& CenterPos,
@@ -111,32 +112,15 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		cameraTarget,
 		cameraUp);
 
-	//int model = MV1LoadModel("Resources/fighter/fighter.mqo");
-
-	// 時間計測に必要なデータ
-	long long startCount = 0;
-	long long nowCount = 0;
-	long long elapsedCount = 0;
-
-	// 補間で使うデータ
-	// start -> end を 5[ｓ] で完了させる
-	Vector3 start(-100.0f, 0, 0.0f);
-	Vector3 p1(-50.0f, 50.0f, 50.0f);
-	Vector3 p2(+50.0f, -30.0f, -50.0f);
-	Vector3 end(+100.0f, 0, 0);
-
-	std::vector<Vector3> points{ start,start,p1,p2,end,end };
-
-	// P1 からスタートする
-	size_t startIndex = 1;
-
-	float maxTime = 5.0f;
-	float timeRate;
-
 	// ゲームループで使う変数の宣言
+	bool isHit = false;
+	Vector2 lineStart = { 20 ,20 }, lineEnd = { 120, 20 };
+	int circleR = 50;
+	Vector2 circlePos = { WIN_WIDTH / 2,WIN_HEIGHT / 2 };
 
-	Vector3 position;
-	startCount = GetNowHiPerformanceCount();
+
+	Vector2 lineVec, lineEndCirclVec, lineStartCirclVec, normLineVec;
+	float distance, vectorDistance , StartVecDot, EndVecDot;
 
 	// 最新のキーボード情報用
 	char keys[256] = { 0 };
@@ -161,60 +145,62 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		//---------  ここからプログラムを記述  ----------//
 
 		// 更新処理
-		if (CheckHitKey(KEY_INPUT_R)) {
-			startCount = GetNowHiPerformanceCount();
-			startIndex = 1;
+		isHit = false;
+
+		if (keys[KEY_INPUT_W])
+		{
+			lineStart.y -= 10;
+			lineEnd.y -= 10;
 		}
-		nowCount = GetNowHiPerformanceCount();
-		elapsedCount = nowCount - startCount;
-		float elapsedTime = static_cast<float> (elapsedCount) / 1'000'000.0f;
-		// スタート地点	：start
-		// エンド地点		：end
-		// 経過時間		：elapsedTime [s]
-		// 移動完了の率（経過時間/全体時間） ：timeRate (%)
-
-		// timeRate が 1.0ｆ 以上になったら、次の区間に進む
-		//timeRate = min(elapsedTime / maxTime, 1.0f);
-
-
-		timeRate = elapsedTime / maxTime;
-
-		if (timeRate >= 1.0f) {
-			if (startIndex < points.size() - 3) {
-				startIndex += 1;
-				timeRate -= 1.0f;
-				startCount = GetNowHiPerformanceCount();
-			}
-			else {
-				timeRate = 1.0f;
-			}
+		if (keys[KEY_INPUT_S])
+		{
+			lineStart.y += 10;
+			lineEnd.y += 10;
+		}
+		if (keys[KEY_INPUT_A])
+		{
+			lineStart.x -= 10;
+			lineEnd.x -= 10;
+		}
+		if (keys[KEY_INPUT_D])
+		{
+			lineStart.x += 10;
+			lineEnd.x += 10;
 		}
 
-		position = splinePosition(points, startIndex, timeRate);
 
-		 //position = Lerp(start, end, timeRate);
-		// position = easeIn(start, end, timeRate);
-		// position = easeOut(start, end, timeRate);
-		// position = easeInOut(start, end, timeRate);
+		lineVec = lineEnd - lineStart;
+		lineEndCirclVec = circlePos- lineEnd;
+		lineStartCirclVec = circlePos - lineStart;
+		normLineVec = lineVec.nomalize();
 
+		
+		StartVecDot = lineStartCirclVec.dot(lineVec);
+		EndVecDot = lineEndCirclVec.dot(lineVec);
 
+		if (StartVecDot * EndVecDot <= 0)
+		{
+			isHit = true;
+		}
+		if (lineEndCirclVec.length() < circleR || lineStartCirclVec.length() < circleR)
+		{
+			isHit = true;
+		}
 
 		// 描画処理
 		// 画面クリア
 		ClearDrawScreen();
-		DrawAxis3D(500.0f);
+		//DrawAxis3D(500.0f);
 
+		DrawLine(lineStart.x, lineStart.y, lineEnd.x, lineEnd.y, GetColor(255, 255, 255));
 
-		DrawSphere3D(position, 5.0f, 32, GetColor(255, 0, 0), GetColor(255, 255, 255), TRUE);
+		if (isHit){
+			DrawCircle(circlePos, circleR, GetColor(255, 0, 0));
+		}else
+		{
+			DrawCircle(circlePos, circleR, GetColor(255, 255, 255));
+		}
 
-		DrawFormatString(0, 0, GetColor(255, 255, 255), "position (%5.1f,%5.1f,%5.1f)", position.x, position.y, position.z);
-		DrawFormatString(0, 20, GetColor(255, 255, 255), "%7.3f [s] ", elapsedTime);
-		DrawFormatString(0, 40, GetColor(255, 255, 255), " [R] : Restart");
-		DrawFormatString(0, 60, GetColor(255, 255, 255), "%7.3f [s] ", timeRate);
-		DrawFormatString(0, 80, GetColor(255, 255, 255), " A (%5.1f,%5.1f,%5.1f)", start.x, start.y, start.z);
-		DrawFormatString(0, 100, GetColor(255, 255, 255), " B (%5.1f,%5.1f,%5.1f)", p1.x, p1.y, p1.z);
-		DrawFormatString(0, 120, GetColor(255, 255, 255), " A (%5.1f,%5.1f,%5.1f)", p2.x, p2.y, p2.z);
-		DrawFormatString(0, 140, GetColor(255, 255, 255), " B (%5.1f,%5.1f,%5.1f)", end.x, end.y, end.z);
 
 		//DrawKeyOperation();
 
@@ -246,9 +232,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 //オーバーロード関数
 //表示位置に　ベクトル（Vector2）　を指定できるようにする
-//int DrawCircle(Vector2 vec, int r, unsigned int color) {
-//	return DrawCircle(static_cast<int>(vec.x), static_cast<int>(vec.y), r, color);
-//}
+int DrawCircle(Vector2 vec, int r, unsigned int color) {
+	return DrawCircle(static_cast<int>(vec.x), static_cast<int>(vec.y), r, color);
+}
 
 //表示位置に　ベクトル（Vector3）　を指定できるようにする
 int DrawSphere3D(
@@ -360,7 +346,7 @@ const Vector3 Lerp(const Vector3& start, const Vector3& end, const float t) {
 	/*float y = t;
 	return start * (1.0f - y) + end * y;*/
 	//return start * (1.0f - t) + end * t;
-	
+
 	//return start * (1.0f - t*t*t*t*t*t) + end * t;
 	Vector3 x = start * (1.0f - t) + end * t;
 
@@ -384,10 +370,10 @@ Vector3 splinePosition(const std::vector<Vector3>& points, size_t startIndex, fl
 
 	// Catmull-Rom の式による補間
 	Vector3 position;
-		position = {
-		2 * p1 + (-p0 + p2) * t +
-		(2 * p0 - 5 * p1 + 4 * p2 - p3) * (t * t) +
-		(-p0 + 3 * p1 - 3 * p2 + p3) * (t * t * t)};
+	position = {
+	2 * p1 + (-p0 + p2) * t +
+	(2 * p0 - 5 * p1 + 4 * p2 - p3) * (t * t) +
+	(-p0 + 3 * p1 - 3 * p2 + p3) * (t * t * t) };
 
-		return position*0.5f;
+	return position * 0.5f;
 }
