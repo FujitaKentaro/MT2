@@ -101,6 +101,41 @@ Quaternion MakeAxisAngle(const Vector3& axsi, float angle)
 	return result;
 }
 
+//球面線形補間
+Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, float t) {
+
+	Quaternion r0 = q0;
+	Quaternion r1 = q1;
+	float epsilon = 0.0005f;
+
+	//内積
+	float dot = (r0.x * r1.x) + (r0.y * r1.y) + (r0.z * r1.z) + (r0.w * r1.w);
+	//反転処理
+	if (dot < 0)
+	{
+		r0 = -r0;//もう片方の回転を利用する
+		dot = -dot;//内積も反転
+	}
+	//なす角を求める
+	float theta = std::acos(dot);
+
+	float scale0;
+	float scale1;
+
+	//thetaとsinを使って補間係数を求める
+	scale0 = sinf((1 - t) * theta) / sinf(theta);
+
+	scale1 = sinf(t * theta) / sinf(theta);
+
+	if (dot >= 1.0f - epsilon)
+	{
+		return (1.0 - t) * r0 + t * r1;
+	}
+
+	//補間後のQuaternionを求める
+	return scale0 * r0 + scale1 * r1;
+}
+
 Vector3 Quaternion::RotateVector(const Vector3& vector)
 {
 	Quaternion result;
@@ -148,4 +183,83 @@ const Quaternion operator/(const Quaternion& v, float s)
 	result.z = v.z / s;
 
 	return result;
+}
+
+Quaternion Quaternion::operator+() const
+{
+	return *this;
+}
+
+Quaternion Quaternion::operator-() const
+{
+	return Quaternion(-x, -y, -z, -w);
+}
+
+Quaternion& Quaternion::operator+=(const Quaternion& v)
+{
+	this->x += v.x;
+	this->y += v.y;
+	this->z += v.z;
+	this->w += v.w;
+	return *this;
+	// TODO: return ステートメントをここに挿入します
+}
+
+Quaternion& Quaternion::operator-=(const Quaternion& v)
+{
+	this->x -= v.x;
+	this->y -= v.y;
+	this->z -= v.z;
+	this->w -= v.w;
+	return *this;
+	// TODO: return ステートメントをここに挿入します
+}
+
+Quaternion& Quaternion::operator*=(float s)
+{
+	this->x *= s;
+	this->y *= s;
+	this->z *= s;
+	this->w *= s;
+	return *this;
+	// TODO: return ステートメントをここに挿入します
+}
+
+Quaternion& Quaternion::operator/=(float s)
+{
+	this->x /= s;
+	this->y /= s;
+	this->z /= s;
+	this->w /= s;
+	return *this;
+	// TODO: return ステートメントをここに挿入します
+}
+
+const Quaternion operator+(const Quaternion& v1, const Quaternion& v2)
+{
+	Quaternion temp(v1);
+	return temp += v2;//v1+v2
+}
+
+const Quaternion operator-(const Quaternion& v1, const Quaternion& v2)
+{
+	Quaternion temp(v1);
+	return temp -= v2;//v1+v2
+}
+
+const Quaternion operator*(const Quaternion& v, float s)
+{
+	Quaternion temp(v);
+	return temp *= s;//v*s
+}
+
+const Quaternion operator*(float s, const Quaternion& v)
+{
+	return v * s;//v*s
+}
+
+const Quaternion operator/(const Quaternion& v, float s)
+{
+	Quaternion temp(v);
+	return temp /= s;
 }
