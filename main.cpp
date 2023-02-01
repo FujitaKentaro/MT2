@@ -5,7 +5,11 @@
 #include "Quaternion.h"
 
 // ウィンドウのタイトルに表示する文字列
+<<<<<<< HEAD
 const char TITLE[] = "MT3_";
+=======
+const char TITLE[] = "LE2B_17_ナガハマコウキ";
+>>>>>>> 288e236ac65ca96b0f7a0063bc66bb14cb94c4f7
 
 // ウィンドウ横幅
 const int WIN_WIDTH = 600;
